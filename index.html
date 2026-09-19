@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OptionsStrat Pro | Visual Options Payoff & Greeks Calculator</title>
-<meta name="description" content="Free, interactive visual options strategy payoff calculator, Black-Scholes Greeks, and persistent trade journal.">
+<title>OptionsStrat Pro | Visual Options Strategy & Greeks Calculator</title>
+<meta name="description" content="Free, interactive visual options strategy payoff calculator with 1-click presets: Iron Condors, Covered Calls, Debit Spreads, Strangles, and Black-Scholes Greeks.">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
@@ -18,6 +18,7 @@
     --accent-rose: #fb7185;
     --accent-amber: #fbbf24;
     --accent-indigo: #818cf8;
+    --accent-purple: #c084fc;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   body {
@@ -26,14 +27,14 @@
     padding: 20px;
     min-height: 100vh;
   }
-  .container { max-width: 1300px; margin: 0 auto; }
+  .container { max-width: 1350px; margin: 0 auto; }
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--card-border);
     padding-bottom: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 16px;
   }
@@ -50,26 +51,60 @@
     color: var(--text-secondary);
     margin-top: 4px;
   }
-  .header-actions {
+  .preset-bar {
     display: flex;
-    gap: 10px;
-    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
   }
-  .badge {
-    padding: 6px 12px;
-    border-radius: 9999px;
+  .preset-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 8px 14px;
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
-    background: rgba(56, 189, 248, 0.1);
-    color: var(--accent-cyan);
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
   }
+  .preset-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-cyan);
+    background: rgba(56, 189, 248, 0.05);
+  }
+  .preset-btn.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+  }
+  .metrics-ribbon {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 12px 14px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .metric-card .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+  .metric-card .value { font-size: 16px; font-weight: 800; font-family: monospace; margin-top: 4px; }
   .main-layout {
     display: grid;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 360px 1fr;
     gap: 24px;
   }
-  @media (max-width: 960px) {
+  @media (max-width: 1024px) {
     .main-layout { grid-template-columns: 1fr; }
   }
   .card {
@@ -89,51 +124,30 @@
     align-items: center;
   }
   .input-group {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .input-group label {
     display: block;
     font-size: 11px;
     text-transform: uppercase;
     color: var(--text-secondary);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     font-weight: 600;
-    letter-spacing: 0.5px;
   }
   .input-group input, .input-group select {
     width: 100%;
     background: #0b0f19;
     border: 1px solid var(--card-border);
     color: var(--text-primary);
-    padding: 9px 12px;
+    padding: 8px 10px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     outline: none;
-    transition: border-color 0.2s;
   }
   .input-group input:focus, .input-group select:focus {
     border-color: var(--accent-cyan);
   }
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .metrics-ribbon {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .metric-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    padding: 14px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  .metric-card .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
-  .metric-card .value { font-size: 17px; font-weight: 800; font-family: monospace; margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .tabs {
     display: flex;
     gap: 10px;
@@ -149,68 +163,30 @@
     font-size: 13px;
     font-weight: 700;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
   }
-  .tab-btn:hover { color: var(--text-primary); }
   .tab-btn.active {
     color: var(--accent-cyan);
     border-bottom-color: var(--accent-cyan);
   }
   .chart-wrapper {
     position: relative;
-    height: 340px;
+    height: 350px;
     width: 100%;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  table th {
-    text-align: left;
-    padding: 10px;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--card-border);
-    font-size: 11px;
-    text-transform: uppercase;
-  }
-  table td {
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table th { text-align: left; padding: 10px; color: var(--text-secondary); border-bottom: 1px solid var(--card-border); font-size: 11px; text-transform: uppercase; }
+  table td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
   .btn {
     background: var(--accent-cyan);
     color: #0b0f19;
     font-weight: 700;
     border: none;
-    padding: 10px 18px;
+    padding: 8px 14px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: opacity 0.2s;
+    font-size: 12px;
   }
-  .btn:hover { opacity: 0.9; }
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--card-border);
-    color: var(--text-primary);
-  }
-  .btn-outline:hover { background: rgba(255, 255, 255, 0.05); }
-  .cta-box {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 10px;
-    padding: 16px;
-    margin-top: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
+  .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-primary); }
 </style>
 </head>
 <body>
@@ -218,112 +194,105 @@
 <div class="container">
   <header>
     <div class="logo-area">
-      <h1>ð OptionsStrat Pro</h1>
-      <p>Clean, real-time options payoff modeling, Black-Scholes Greeks, and trade journaling.</p>
+      <h1>ð OptionsStrat Pro <span style="font-size:12px; background:rgba(56,189,248,0.15); padding:3px 8px; border-radius:999px; border:1px solid var(--accent-cyan); font-weight:600;">v2.0 Presets</span></h1>
+      <p>Visual Options Payoff Calculator, Black-Scholes Greeks, and 1-Click Strategy Presets.</p>
     </div>
-    <div class="header-actions">
-      <div class="badge">ð Production Ready</div>
-      <button class="btn btn-outline" onclick="exportJournal()">ð¥ Export Journal</button>
+    <div>
+      <button class="btn btn-outline" onclick="window.print()">ð¨ï¸ Print / PDF</button>
     </div>
   </header>
 
-  <!-- Metrics Ribbon -->
+  <!-- 1-Click Strategy Presets Bar -->
+  <div class="preset-bar">
+    <button class="preset-btn active" onclick="loadPreset('strangle')">ð¯ Long Strangle</button>
+    <button class="preset-btn" onclick="loadPreset('straddle')">âï¸ Long Straddle</button>
+    <button class="preset-btn" onclick="loadPreset('condor')">ð¦ Iron Condor</button>
+    <button class="preset-btn" onclick="loadPreset('bull_call')">ð Bull Call Spread</button>
+    <button class="preset-btn" onclick="loadPreset('bear_put')">ð Bear Put Spread</button>
+    <button class="preset-btn" onclick="loadPreset('covered_call')">ð¡ï¸ Covered Call</button>
+    <button class="preset-btn" onclick="loadPreset('cash_put')">ðµ Cash-Secured Put</button>
+  </div>
+
+  <!-- Key Metrics Ribbon -->
   <div class="metrics-ribbon">
     <div class="metric-card">
-      <div class="label">Underlying Ticker</div>
-      <div class="value" style="color: var(--accent-cyan);" id="dispTicker">SOFI</div>
+      <div class="label">Strategy</div>
+      <div class="value" style="color: var(--accent-cyan);" id="dispStrategy">Long Strangle</div>
     </div>
     <div class="metric-card">
-      <div class="label">Current Price</div>
+      <div class="label">Spot Price</div>
       <div class="value" id="dispSpot">$16.96</div>
     </div>
     <div class="metric-card">
-      <div class="label">Total Risk / Premium</div>
+      <div class="label">Max Risk / Loss</div>
       <div class="value" style="color: var(--accent-rose);" id="dispRisk">$9.00</div>
     </div>
     <div class="metric-card">
-      <div class="label">Lower Breakeven</div>
-      <div class="value" style="color: var(--accent-amber);" id="dispLowerBE">$13.91</div>
+      <div class="label">Max Profit</div>
+      <div class="value" style="color: var(--accent-emerald);" id="dispMaxProfit">Unlimited</div>
     </div>
     <div class="metric-card">
-      <div class="label">Upper Breakeven</div>
-      <div class="value" style="color: var(--accent-emerald);" id="dispUpperBE">$20.09</div>
+      <div class="label">Breakevens</div>
+      <div class="value" style="color: var(--accent-amber);" id="dispBreakeven">$13.91 / $20.09</div>
     </div>
     <div class="metric-card">
-      <div class="label">Net Position Delta</div>
+      <div class="label">Net Delta (Î)</div>
       <div class="value" id="dispNetDelta">+0.042</div>
     </div>
   </div>
 
   <div class="main-layout">
-    <!-- Left Configuration Panel -->
+    <!-- Configurator Form -->
     <div>
       <div class="card">
         <div class="card-title">
-          <span>âï¸ Position Configurator</span>
-        </div>
-        
-        <div class="input-group">
-          <label>Ticker Symbol</label>
-          <input type="text" id="ticker" value="SOFI" oninput="updateAll()">
-        </div>
-
-        <div class="input-group">
-          <label>Underlying Spot Price ($)</label>
-          <input type="number" id="spot" value="16.96" step="0.01" oninput="updateAll()">
+          <span>âï¸ Strategy Legs</span>
+          <span style="font-size: 11px; color: var(--text-secondary);" id="legCountDisplay">2 Legs</span>
         </div>
 
         <div class="grid-2">
           <div class="input-group">
-            <label>Call Strike ($)</label>
-            <input type="number" id="callStrike" value="20.00" step="0.50" oninput="updateAll()">
+            <label>Ticker</label>
+            <input type="text" id="ticker" value="SOFI" oninput="updateAll()">
           </div>
           <div class="input-group">
-            <label>Call Premium ($)</label>
-            <input type="number" id="callPrem" value="0.05" step="0.01" oninput="updateAll()">
+            <label>Spot Price ($)</label>
+            <input type="number" id="spot" value="16.96" step="0.01" oninput="updateAll()">
           </div>
         </div>
 
         <div class="grid-2">
           <div class="input-group">
-            <label>Put Strike ($)</label>
-            <input type="number" id="putStrike" value="14.00" step="0.50" oninput="updateAll()">
-          </div>
-          <div class="input-group">
-            <label>Put Premium ($)</label>
-            <input type="number" id="putPrem" value="0.04" step="0.01" oninput="updateAll()">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>Days to Expiration (DTE)</label>
+            <label>Days to Exp (DTE)</label>
             <input type="number" id="dte" value="13" min="0" max="365" oninput="updateAll()">
           </div>
           <div class="input-group">
-            <label>Implied Volatility (IV %)</label>
+            <label>Implied Vol (IV %)</label>
             <input type="number" id="iv" value="65" min="5" max="300" oninput="updateAll()">
           </div>
+        </div>
+
+        <!-- Dynamic Legs Container -->
+        <div id="legsContainer">
+          <!-- Populated by presets -->
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">ð¡ Position Playbook</div>
-        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
-          <strong>Strategy:</strong> Long OTM Strangle<br>
-          <strong>Max Downside Risk:</strong> Limited to \$9.00 (Total Premium Paid)<br>
-          <strong>Profit Condition:</strong> Stock moves below \$13.91 or above \$20.09 before expiration.
+        <div class="card-title">ð Strategy Description</div>
+        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;" id="strategyDescription">
+          <strong>Long Strangle:</strong> Involves buying an OTM Call and an OTM Put. Generates profit if the underlying stock experiences a large price move in either direction before expiration.
         </p>
       </div>
     </div>
 
-    <!-- Right Visualization Panel -->
+    <!-- Charts & Analytics Panel -->
     <div>
       <div class="card">
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab('payoff')">ð Payoff & P&L Curve</button>
           <button class="tab-btn" onclick="switchTab('theta')">â±ï¸ Theta Time Decay</button>
-          <button class="tab-btn" onclick="switchTab('greeks')">ð Greeks Breakdown</button>
+          <button class="tab-btn" onclick="switchTab('greeks')">ð Greeks Matrix</button>
           <button class="tab-btn" onclick="switchTab('journal')">ð Trade Journal</button>
         </div>
 
@@ -346,8 +315,9 @@
           <table>
             <thead>
               <tr>
-                <th>Leg</th>
+                <th>Leg Type</th>
                 <th>Strike</th>
+                <th>Side</th>
                 <th>Delta (Î)</th>
                 <th>Gamma (Î)</th>
                 <th>Theta (Î/day)</th>
@@ -361,16 +331,16 @@
         <!-- Tab 4: Trade Journal -->
         <div id="tab-journal" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <span style="font-size: 13px; font-weight: 700;">Recorded Entries</span>
-            <button class="btn" onclick="addNote()">+ Add Trade Note</button>
+            <span style="font-size: 13px; font-weight: 700;">Active Trade Log</span>
+            <button class="btn" onclick="addNote()">+ Add Note</button>
           </div>
           <table>
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Ticker</th>
-                <th>Leg Details</th>
-                <th>Cost</th>
+                <th>Strategy</th>
+                <th>Max Risk</th>
                 <th>Status</th>
                 <th>Notes</th>
               </tr>
@@ -379,31 +349,14 @@
               <tr>
                 <td>2026-09-18</td>
                 <td><strong>SOFI</strong></td>
-                <td>10/2 $20.00 Call</td>
-                <td>$5.00</td>
-                <td><span style="color:var(--accent-emerald); font-weight:700;">FILLED</span></td>
-                <td>Long Call upside exposure</td>
-              </tr>
-              <tr>
-                <td>2026-09-18</td>
-                <td><strong>SOFI</strong></td>
-                <td>10/2 $14.00 Put</td>
-                <td>$4.00</td>
-                <td><span style="color:var(--accent-amber); font-weight:700;">QUEUED</span></td>
-                <td>Long Put downside hedge</td>
+                <td>Long Strangle (10/2 $20C / $14P)</td>
+                <td>$9.00</td>
+                <td><span style="color:var(--accent-emerald); font-weight:700;">FILLED / QUEUED</span></td>
+                <td>Strangle position tracking</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-
-      <!-- Monetization / Sharing Banner -->
-      <div class="cta-box">
-        <div>
-          <h4 style="font-size: 14px; font-weight: 700;">Ready to monetize or share with traders?</h4>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Deploy this app on Vercel or GitHub Pages in under 2 minutes.</p>
-        </div>
-        <button class="btn" onclick="window.print()">ð¨ï¸ Export PDF Report</button>
       </div>
     </div>
   </div>
@@ -441,95 +394,234 @@
     return { price: Math.max(0.001, price), delta, gamma, theta, vega };
   }
 
+  let currentPreset = 'strangle';
+  let legs = [];
   let payoffChart, thetaChart;
+
+  const PRESET_DEFINITIONS = {
+    strangle: {
+      name: "Long Strangle",
+      desc: "Buy OTM Call and OTM Put. High-volatility play expecting a big move in either direction.",
+      legs: [
+        { type: 'call', side: 'buy', strike: 20.00, premium: 0.05, qty: 1 },
+        { type: 'put', side: 'buy', strike: 14.00, premium: 0.04, qty: 1 }
+      ]
+    },
+    straddle: {
+      name: "Long Straddle",
+      desc: "Buy ATM Call and ATM Put at the exact same strike. Maximum sensitivity to explosive volatility.",
+      legs: [
+        { type: 'call', side: 'buy', strike: 17.00, premium: 0.55, qty: 1 },
+        { type: 'put', side: 'buy', strike: 17.00, premium: 0.58, qty: 1 }
+      ]
+    },
+    condor: {
+      name: "Iron Condor",
+      desc: "Sell OTM Put Spread and OTM Call Spread. Neutral range-bound play collecting theta income if stock stays between inner strikes.",
+      legs: [
+        { type: 'put', side: 'buy', strike: 13.00, premium: 0.02, qty: 1 },
+        { type: 'put', side: 'sell', strike: 15.00, premium: 0.12, qty: 1 },
+        { type: 'call', side: 'sell', strike: 19.00, premium: 0.14, qty: 1 },
+        { type: 'call', side: 'buy', strike: 21.00, premium: 0.03, qty: 1 }
+      ]
+    },
+    bull_call: {
+      name: "Bull Call Debit Spread",
+      desc: "Buy lower strike Call and sell higher strike Call. Defined-risk bullish directional play with lower cost than naked call.",
+      legs: [
+        { type: 'call', side: 'buy', strike: 16.00, premium: 1.20, qty: 1 },
+        { type: 'call', side: 'sell', strike: 19.00, premium: 0.20, qty: 1 }
+      ]
+    },
+    bear_put: {
+      name: "Bear Put Debit Spread",
+      desc: "Buy higher strike Put and sell lower strike Put. Defined-risk bearish play capping downside cost.",
+      legs: [
+        { type: 'put', side: 'buy', strike: 18.00, premium: 1.35, qty: 1 },
+        { type: 'put', side: 'sell', strike: 15.00, premium: 0.25, qty: 1 }
+      ]
+    },
+    covered_call: {
+      name: "Covered Call",
+      desc: "Hold 100 shares long and sell an OTM Call to generate steady cash-flow yield while capping upside.",
+      legs: [
+        { type: 'stock', side: 'buy', strike: 16.96, premium: 16.96, qty: 1 },
+        { type: 'call', side: 'sell', strike: 18.50, premium: 0.35, qty: 1 }
+      ]
+    },
+    cash_put: {
+      name: "Cash-Secured Put",
+      desc: "Sell an OTM Put while holding cash collateral. Generates option premium income with willingness to buy stock at strike.",
+      legs: [
+        { type: 'put', side: 'sell', strike: 15.00, premium: 0.18, qty: 1 }
+      ]
+    }
+  };
+
+  function loadPreset(key) {
+    currentPreset = key;
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('onclick').includes(key));
+    });
+
+    const def = PRESET_DEFINITIONS[key];
+    document.getElementById('dispStrategy').innerText = def.name;
+    document.getElementById('strategyDescription').innerHTML = `<strong>${def.name}:</strong> ${def.desc}`;
+    legs = JSON.parse(JSON.stringify(def.legs));
+    renderLegInputs();
+    updateAll();
+  }
+
+  function renderLegInputs() {
+    const container = document.getElementById('legsContainer');
+    document.getElementById('legCountDisplay').innerText = `${legs.length} Leg${legs.length > 1 ? 's' : ''}`;
+    let html = '';
+    legs.forEach((leg, i) => {
+      const isStock = leg.type === 'stock';
+      html += `
+        <div style="background:rgba(0,0,0,0.25); border:1px solid var(--card-border); border-radius:8px; padding:10px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-bottom:6px; color:var(--accent-cyan);">
+            <span>LEG ${i+1}: ${leg.side.toUpperCase()} ${leg.type.toUpperCase()}</span>
+          </div>
+          <div class="grid-2">
+            <div class="input-group" style="margin-bottom:0;">
+              <label>${isStock ? 'Entry Price ($)' : 'Strike ($)'}</label>
+              <input type="number" step="0.50" value="${leg.strike}" oninput="legs[${i}].strike = parseFloat(this.value); updateAll();">
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <label>${isStock ? 'Shares Qty' : 'Premium ($)'}</label>
+              <input type="number" step="0.01" value="${leg.premium}" oninput="legs[${i}].premium = parseFloat(this.value); updateAll();">
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
 
   function updateAll() {
     const ticker = document.getElementById('ticker').value || 'SOFI';
     const S = parseFloat(document.getElementById('spot').value) || 16.96;
-    const callK = parseFloat(document.getElementById('callStrike').value) || 20.00;
-    const callP = parseFloat(document.getElementById('callPrem').value) || 0.05;
-    const putK = parseFloat(document.getElementById('putStrike').value) || 14.00;
-    const putP = parseFloat(document.getElementById('putPrem').value) || 0.04;
     const dte = parseFloat(document.getElementById('dte').value) || 13;
     const iv = (parseFloat(document.getElementById('iv').value) || 65) / 100;
     const r = 0.045;
-
-    const totalRisk = (callP + putP) * 100;
-    const lowerBE = putK - (callP + putP);
-    const upperBE = callK + (callP + putP);
-
-    document.getElementById('dispTicker').innerText = ticker.toUpperCase();
-    document.getElementById('dispSpot').innerText = `$${S.toFixed(2)}`;
-    document.getElementById('dispRisk').innerText = `$${totalRisk.toFixed(2)}`;
-    document.getElementById('dispLowerBE').innerText = `$${lowerBE.toFixed(2)}`;
-    document.getElementById('dispUpperBE').innerText = `$${upperBE.toFixed(2)}`;
-
     const T = Math.max(0.001, dte / 365);
-    const callGreeks = calcBS(S, callK, T, r, iv, true);
-    const putGreeks = calcBS(S, putK, T, r, iv, false);
-    const netDelta = callGreeks.delta + putGreeks.delta;
-    document.getElementById('dispNetDelta').innerText = `${netDelta >= 0 ? '+' : ''}${netDelta.toFixed(3)}`;
 
-    // Payoff curve
+    document.getElementById('dispSpot').innerText = `$${S.toFixed(2)}`;
+
+    // Evaluate Net Cost & Payoff across price range
+    let netDebit = 0;
+    let totalDelta = 0, totalGamma = 0, totalTheta = 0, totalVega = 0;
+
+    let greeksRows = '';
+
+    legs.forEach(leg => {
+      const sign = leg.side === 'buy' ? 1 : -1;
+      if (leg.type === 'stock') {
+        netDebit += sign * leg.strike;
+        totalDelta += sign * 1.0;
+        greeksRows += `
+          <tr>
+            <td><strong>100 Shares Long</strong></td>
+            <td>$${leg.strike.toFixed(2)}</td>
+            <td>${leg.side.toUpperCase()}</td>
+            <td>1.000</td><td>0.000</td><td>$0.00</td><td>$0.00</td>
+          </tr>
+        `;
+      } else {
+        const isCall = leg.type === 'call';
+        netDebit += sign * (leg.premium * 100);
+        const bs = calcBS(S, leg.strike, T, r, iv, isCall);
+        totalDelta += sign * bs.delta;
+        totalGamma += sign * bs.gamma;
+        totalTheta += sign * bs.theta;
+        totalVega += sign * bs.vega;
+
+        greeksRows += `
+          <tr>
+            <td><strong>${leg.type.toUpperCase()}</strong></td>
+            <td>$${leg.strike.toFixed(2)}</td>
+            <td><span style="color:${leg.side === 'buy' ? 'var(--accent-emerald)' : 'var(--accent-rose)'}; font-weight:700;">${leg.side.toUpperCase()}</span></td>
+            <td>${(sign * bs.delta).toFixed(3)}</td>
+            <td>${(sign * bs.gamma).toFixed(3)}</td>
+            <td style="color:var(--accent-rose)">$${(sign * bs.theta * 100).toFixed(2)}</td>
+            <td>$${(sign * bs.vega * 100).toFixed(2)}</td>
+          </tr>
+        `;
+      }
+    });
+
+    greeksRows += `
+      <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
+        <td>NET COMBINED</td><td>-</td><td>-</td>
+        <td style="color:${totalDelta >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'}">${totalDelta.toFixed(3)}</td>
+        <td>${totalGamma.toFixed(3)}</td>
+        <td style="color:var(--accent-rose)">$${(totalTheta * 100).toFixed(2)} / day</td>
+        <td>$${(totalVega * 100).toFixed(2)} / 1% IV</td>
+      </tr>
+    `;
+    document.getElementById('greeksBody').innerHTML = greeksRows;
+    document.getElementById('dispNetDelta').innerText = `${totalDelta >= 0 ? '+' : ''}${totalDelta.toFixed(3)}`;
+
+    // Build Chart Data
     const prices = [];
     const expPnL = [];
     const nowPnL = [];
-    const minP = Math.max(1, S * 0.6);
-    const maxP = S * 1.4;
-    const step = (maxP - minP) / 50;
+    const minP = Math.max(1, S * 0.5);
+    const maxP = S * 1.5;
+    const step = (maxP - minP) / 60;
+
+    let maxLoss = 0;
+    let maxProfit = -Infinity;
 
     for (let p = minP; p <= maxP; p += step) {
       prices.push(p.toFixed(2));
-      const expProfit = (Math.max(0, p - callK) + Math.max(0, putK - p) - (callP + putP)) * 100;
-      expPnL.push(expProfit.toFixed(2));
+      let pnlAtExp = 0;
+      let pnlNow = 0;
 
-      const cBS = calcBS(p, callK, T, r, iv, true);
-      const pBS = calcBS(p, putK, T, r, iv, false);
-      const curProfit = ((cBS.price + pBS.price) - (callP + putP)) * 100;
-      nowPnL.push(curProfit.toFixed(2));
+      legs.forEach(leg => {
+        const sign = leg.side === 'buy' ? 1 : -1;
+        if (leg.type === 'stock') {
+          pnlAtExp += (p - leg.strike) * 100;
+          pnlNow += (p - leg.strike) * 100;
+        } else {
+          const isCall = leg.type === 'call';
+          const expVal = isCall ? Math.max(0, p - leg.strike) : Math.max(0, leg.strike - p);
+          pnlAtExp += sign * (expVal - leg.premium) * 100;
+
+          const bs = calcBS(p, leg.strike, T, r, iv, isCall);
+          pnlNow += sign * (bs.price - leg.premium) * 100;
+        }
+      });
+
+      expPnL.push(pnlAtExp.toFixed(2));
+      nowPnL.push(pnlNow.toFixed(2));
+
+      if (pnlAtExp < maxLoss) maxLoss = pnlAtExp;
+      if (pnlAtExp > maxProfit) maxProfit = pnlAtExp;
     }
+
+    document.getElementById('dispRisk').innerText = maxLoss < 0 ? `$${Math.abs(maxLoss).toFixed(2)}` : '$0.00';
+    document.getElementById('dispMaxProfit').innerText = maxProfit > 500 ? 'Unlimited / High' : `$${maxProfit.toFixed(2)}`;
 
     drawPayoff(prices, expPnL, nowPnL);
 
-    // Theta decay curve
+    // Theta Decay
     const days = [];
     const decayVals = [];
     for (let d = dte; d >= 0; d--) {
       days.push(`${d} DTE`);
       const tSub = Math.max(0.0001, d / 365);
-      const cVal = calcBS(S, callK, tSub, r, iv, true).price;
-      const pVal = calcBS(S, putK, tSub, r, iv, false).price;
-      decayVals.push(((cVal + pVal) * 100).toFixed(2));
+      let totalVal = 0;
+      legs.forEach(leg => {
+        if (leg.type !== 'stock') {
+          const bs = calcBS(S, leg.strike, tSub, r, iv, leg.type === 'call');
+          totalVal += (leg.side === 'buy' ? 1 : -1) * bs.price * 100;
+        }
+      });
+      decayVals.push(totalVal.toFixed(2));
     }
     drawTheta(days, decayVals);
-
-    // Greeks table
-    document.getElementById('greeksBody').innerHTML = `
-      <tr>
-        <td><strong>${ticker} Call</strong></td>
-        <td>$${callK.toFixed(2)}</td>
-        <td>${callGreeks.delta.toFixed(3)}</td>
-        <td>${callGreeks.gamma.toFixed(3)}</td>
-        <td style="color:var(--accent-rose)">$${(callGreeks.theta * 100).toFixed(2)}</td>
-        <td>$${(callGreeks.vega * 100).toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td><strong>${ticker} Put</strong></td>
-        <td>$${putK.toFixed(2)}</td>
-        <td>${putGreeks.delta.toFixed(3)}</td>
-        <td>${putGreeks.gamma.toFixed(3)}</td>
-        <td style="color:var(--accent-rose)">$${(putGreeks.theta * 100).toFixed(2)}</td>
-        <td>$${(putGreeks.vega * 100).toFixed(2)}</td>
-      </tr>
-      <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
-        <td>NET STRANGLE</td>
-        <td>-</td>
-        <td>${netDelta.toFixed(3)}</td>
-        <td>${(callGreeks.gamma + putGreeks.gamma).toFixed(3)}</td>
-        <td style="color:var(--accent-rose)">$${((callGreeks.theta + putGreeks.theta) * 100).toFixed(2)} / day</td>
-        <td>$${((callGreeks.vega + putGreeks.vega) * 100).toFixed(2)} / 1% IV</td>
-      </tr>
-    `;
   }
 
   function drawPayoff(labels, expData, nowData) {
@@ -540,7 +632,7 @@
       data: {
         labels: labels,
         datasets: [
-          { label: 'P&L at Expiration ($)', data: expData, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.05)', borderWidth: 2.5, fill: true, pointRadius: 0 },
+          { label: 'P&L at Expiration ($)', data: expData, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.06)', borderWidth: 2.5, fill: true, pointRadius: 0 },
           { label: 'Estimated P&L Today ($)', data: nowData, borderColor: '#38bdf8', borderDash: [4, 4], borderWidth: 2, pointRadius: 0 }
         ]
       },
@@ -563,7 +655,7 @@
       type: 'line',
       data: {
         labels: labels,
-        datasets: [{ label: 'Position Extrinsic Value ($)', data: data, borderColor: '#fb7185', backgroundColor: 'rgba(251,113,133,0.1)', borderWidth: 2.5, fill: true, pointRadius: 3 }]
+        datasets: [{ label: 'Option Extrinsic Value ($)', data: data, borderColor: '#fb7185', backgroundColor: 'rgba(251,113,133,0.1)', borderWidth: 2.5, fill: true, pointRadius: 3 }]
       },
       options: {
         responsive: true,
@@ -587,26 +679,22 @@
   }
 
   function addNote() {
-    const n = prompt("Enter trade note / journal update:");
+    const n = prompt("Enter trade note / rationale:");
     if (!n) return;
     const tbody = document.getElementById('journalEntries');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${new Date().toISOString().split('T')[0]}</td>
       <td><strong>${document.getElementById('ticker').value.toUpperCase()}</strong></td>
-      <td>Strangle Note</td>
-      <td>-</td>
+      <td>${PRESET_DEFINITIONS[currentPreset].name}</td>
+      <td>${document.getElementById('dispRisk').innerText}</td>
       <td><span style="color:var(--accent-cyan); font-weight:700;">LOGGED</span></td>
       <td>${n}</td>
     `;
     tbody.appendChild(tr);
   }
 
-  function exportJournal() {
-    alert("Trade journal exported successfully as JSON!");
-  }
-
-  window.onload = updateAll;
+  window.onload = () => { loadPreset('strangle'); };
 </script>
 </body>
 </html>
